@@ -1,37 +1,24 @@
-# Format: FROM    repository[:version]
-FROM       ubuntu:latest
+FROM ubuntu:14.04
 
-# Format: MAINTAINER Name <email@addr.ess>
-MAINTAINER Yang Lei <yanglei@us.ibm.com>
-
-# Installation:
-
-# Update apt-get sources AND install NodeJS and npm
-RUN apt-get update && apt-get install -y nodejs && apt-get install -y npm 
-
-# The real logic
-
-ADD ./ /var/apps/acmeair-nodejs
-
-RUN \
-  rm -fr /var/apps/acmeair-nodejs/.git ;\
-  cd /var/apps/acmeair-nodejs ;\
-  npm install;\
-  chmod +x run.sh
-
-
-WORKDIR /var/apps/acmeair-nodejs
+MAINTAINER Jaideep Bajwa
 
 EXPOSE 9080 9443
 
-ENV APP_NAME app.js
+RUN apt-get update && apt-get install -y \
+    npm
 
-# Use the following to indicate authentication micro-service location: host:port
-#ENV AUTH_SERVICE
+COPY ./ /acmeair/acmeair-nodejs
 
-# Use the following environment variable to define datasource location
-#ENV MONGO_URL mongodb://localhost:27017/acmeair
-#ENV CLOUDANT_URL
+WORKDIR /acmeair/acmeair-nodejs
 
+RUN npm install
 
-CMD ["./run.sh"]
+ENV AUTH_SERVICE=localhost:9443
+ENV enableHystrix=true
+
+RUN chmod u+x run.sh
+
+# To make node the main process of the docker
+# nodeDir is mounted from host machine which
+# contains the node binary
+ENTRYPOINT ["./run.sh"]
